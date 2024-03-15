@@ -1,0 +1,93 @@
+import pandas as pd
+import numpy as np
+import pickle
+def preprocess(fname):
+    '''
+    A helper function provided to you to remove the $ symbols in the dataset and to convert data type for columns to float. 
+    Input Parameters:
+        fname: (string) relative path + the name of the csv file containing historical quotes
+    Return:
+        df: A pandas dataframe with $ symbol removed from columns and data type of columns converted to float
+    '''
+    
+    df = pd.read_csv(fname)
+    df.columns = df.columns.str.replace(' ', '', regex=True)
+    
+    columns = ["Close/Last", "Open", "High", "Low"]
+    for column in columns:
+        df[column] = df[column].str.replace('$', '', regex=True)
+        df[column] = df[column].astype(float)
+    
+def normalization (fname, attr, normType, min_norm=0, max_norm=1):
+    '''
+    Input Parameters:
+        fname: (string) relative path + the name of the csv file containing historical quotes
+        attr: (string) the name of attribute to be normalized 
+        normType: (string) the type of normalization to be performed which can be either "min_max" or "z_score"
+        min_norm, max_norm: (int) min and max value for the normalized range when normType is "min_max" (Default 0 and 1)
+    Return:
+        result: a dictionary where each key is the original column value and each value is the normalized column value. 
+    '''
+    # call the preprocess function to convert the data to float type and remove $ symbol in price column
+    df = preprocess(fname) 
+    col_of_interest = df.iloc[:,attr]
+    temp = col_of_interest
+    result = {
+    }
+    # result.update({col_of_interest})
+    # print(result)
+    # for x in result:
+    #     result.append()
+    #TODO: Perform the indicated normalization type and return a dictionary in the shape {original_value:normalized_value, ...}
+    if normType == "min_max":
+        for x in col_of_interest: 
+            x - np.min(col_of_interest) / np.max(col_of_interest) - np.min(col_of_interest) * (max_norm)
+        result.update({temp: col_of_interest})
+    else:
+        for x in col_of_interest:
+            x - np.mean(col_of_interest) /  np.std(col_of_interest,ddof = 1)         
+        result.update({temp: col_of_interest})
+import unittest
+
+class Test(unittest.TestCase):
+    def setUp(self):
+        self.loc1 = "data/test1.csv"
+        self.loc2 = "data/test2.csv"
+        file = open('data/test_normalization', 'rb')
+        testing_normalization_data = pickle.load(file)
+        self.min_norm, self.max_norm = testing_normalization_data[0]
+        self.data_normalization = testing_normalization_data[1]
+        file.close()
+        file = open('data/test_zscore', 'rb')
+        self.zscore = pickle.load(file)
+        file = open('data/test_correlation', 'rb')
+        self.data_correlation = pickle.load(file)
+        file.close()
+        
+    def test0(self):
+        """
+        Test min_max normalization
+        """
+        result = normalization(self.loc2, "High", "min_max", self.min_norm, self.max_norm)
+        for key,value in self.data_normalization.items():
+            self.assertAlmostEqual(result[key],value, places = 1)
+            
+    def test1(self):
+        """
+        Test zcore normalization
+        """
+        result = normalization(self.loc2, "Open", "z_score")
+        for key, value in self.zscore.items():
+            self.assertAlmostEqual(result[key], value, places = 1)
+    
+    def test2(self):
+        """
+        Test correlation coefficient
+        """
+        print(self.data_correlation)
+        result = correlation(self.loc1, "Open", self.loc2, "Close/Last")
+        self.assertAlmostEqual(result,self.data_correlation, places = 1)
+
+tests = Test()
+tests_to_run = unittest.TestLoader().loadTestsFromModule(tests)
+unittest.TextTestRunner().run(tests_to_run)

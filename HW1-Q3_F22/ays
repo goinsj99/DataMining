@@ -1,0 +1,20 @@
+
+import pandas as pd
+
+
+
+f2 = 'data/dataset.csv'
+    # Panda ?
+data = pd.read_csv(f2)
+    # for val in dataFile:
+    #     total =+ val
+    #     temp = val
+    #     index =+ 1
+    #     numObj =+ index
+
+
+    #YOUR TASK: Write code to assign the values to the respective variables.
+test = []
+for index, row in data.iterrows():
+    test.append(index)
+print(test)
